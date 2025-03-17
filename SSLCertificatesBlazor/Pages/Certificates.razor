@@ -1,0 +1,55 @@
+﻿@page "/certificates"
+@using SSLCertificatesBlazor.Shared
+@inject HttpClient Http
+
+<h3>SSL Certificates</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Domain</th>
+            <th>Expiry Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (certificates != null)
+        {
+            @foreach (var certificate in certificates)
+            {
+                <tr>
+                    <td>@certificate.Id</td>
+                    <td>@certificate.Domain</td>
+                    <td>@certificate.ExpiryDate</td>
+                    <td>
+                        <button @onclick="() => DeleteCertificate(certificate.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<SSLCertificate> certificates;
+
+    protected override async Task OnInitializedAsync()
+    {
+        certificates = await Http.GetFromJsonAsync<List<SSLCertificate>>("https://localhost:7094/api/SSLCertificates");
+    }
+
+    private async Task DeleteCertificate(int id)
+    {
+        var response = await Http.DeleteAsync($"https://localhost:7094/api/SSLCertificates/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            // Usuwanie certyfikatu z lokalnej listy po usunięciu z serwera
+            certificates = await Http.GetFromJsonAsync<List<SSLCertificate>>("https://localhost:7094/api/SSLCertificates");
+        }
+        else
+        {
+            Console.WriteLine("Failed to delete certificate.");
+        }
+    }
+}

@@ -1,0 +1,43 @@
+﻿@page "/ssl-certificates"
+@inject HttpClient Http
+
+<h3>SSL Certificates</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Domain</th>
+            <th>Expiry Date</th>
+            <th>Certificate Data</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var certificate in certificates)
+        {
+            <tr>
+                <td>@certificate.Id</td>
+                <td>@certificate.DomainName</td> 
+                <td>@certificate.ExpiryDate</td>
+                <td>@certificate.CertificateData</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<SSLCertificate> certificates = new List<SSLCertificate>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        certificates = await Http.GetFromJsonAsync<List<SSLCertificate>>("api/SSLCertificates");
+    }
+
+    public class SSLCertificate
+    {
+        public int Id { get; set; }
+        public string DomainName { get; set; } 
+        public string CertificateData { get; set; }
+        public DateTime ExpiryDate { get; set; }
+    }
+}

@@ -1,0 +1,61 @@
+﻿@page "/create-certificate"
+@inject HttpClient Http
+@using Namespace.Models
+
+<h3>Generate SSL Certificate</h3>
+
+<div>
+    <label>Common Name (CN):</label>
+    <input type="text" @bind="certificateRequest.CommonName" placeholder="Common Name" />
+</div>
+<div>
+    <label>Organization (O):</label>
+    <input type="text" @bind="certificateRequest.Organization" placeholder="Organization" />
+</div>
+<div>
+    <label>Organizational Unit (OU):</label>
+    <input type="text" @bind="certificateRequest.OrganizationalUnit" placeholder="Organizational Unit" />
+</div>
+<div>
+    <label>Country (C):</label>
+    <input type="text" @bind="certificateRequest.Country" placeholder="Country" />
+</div>
+<div>
+    <label>State or Province (ST):</label>
+    <input type="text" @bind="certificateRequest.StateOrProvince" placeholder="State or Province" />
+</div>
+<div>
+    <label>Locality (L):</label>
+    <input type="text" @bind="certificateRequest.Locality" placeholder="Locality" />
+</div>
+<div>
+    <label>Password:</label>
+    <input type="password" @bind="certificateRequest.Password" placeholder="Password" />
+</div>
+<div>
+    <button @onclick="GenerateCertificate">Generate Certificate</button>
+</div>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private CertificateRequestModel certificateRequest = new CertificateRequestModel();
+    private string message;
+
+    private async Task GenerateCertificate()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("https://localhost:7094/api/CertificateGenerator", certificateRequest);
+            var result = await response.Content.ReadFromJsonAsync<CertificateResponseModel>();
+            message = result.Message + " Path: " + result.Path;
+        }
+        catch (Exception ex)
+        {
+            message = "An error occurred: " + ex.Message;
+        }
+    }
+}

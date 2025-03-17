@@ -1,0 +1,85 @@
+﻿@page "/scan"
+@using SSLCertificatesBlazor.Shared
+@inject HttpClient Http
+
+<h3>Scan SSL Certificate</h3>
+
+<div>
+    <input type="text" @bind="url" placeholder="Enter URL" />
+    <button @onclick="ScanCertificate">Scan</button>
+</div>
+
+@if (certificate != null)
+{
+    <div>
+        <h4>Certificate Details</h4>
+        <p><strong>Domain:</strong> @certificate.Domain</p>
+        <p><strong>Expiry Date:</strong> @certificate.ExpiryDate</p>
+        <button @onclick="AddToDatabase">Add to Database</button>
+    </div>
+}
+else if (errorMessage != null)
+{
+    <p class="text-danger">Error: @errorMessage</p>
+}
+
+@code {
+    private string url;
+    private SSLCertificate certificate;
+    private string errorMessage;
+
+    private async Task ScanCertificate()
+    {
+        try
+        {
+            Console.WriteLine($"Original URL: {url}");
+
+            if (!url.StartsWith("http://") && !url.StartsWith("https://"))
+            {
+                url = "https://" + url;
+            }
+
+            Console.WriteLine($"Scanning URL: {url}");
+
+            
+            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+            {
+                errorMessage = "The URL must be an absolute URI.";
+                return;
+            }
+
+            var response = await Http.GetFromJsonAsync<SSLCertificate>($"https://localhost:7094/api/SSLCertificates/scan?url={url}");
+            certificate = response;
+            errorMessage = null;
+            Console.WriteLine($"Scan successful: {certificate.Domain}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+            Console.WriteLine(errorMessage);
+        }
+    }
+
+    private async Task AddToDatabase()
+    {
+        try
+        {
+            Console.WriteLine("Adding certificate to database...");
+            var response = await Http.PostAsJsonAsync("https://localhost:7094/api/SSLCertificates", certificate);
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Certificate added successfully.");
+            }
+            else
+            {
+                errorMessage = "Failed to add certificate to database.";
+                Console.WriteLine($"Error: {errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+            Console.WriteLine(errorMessage);
+        }
+    }
+}
